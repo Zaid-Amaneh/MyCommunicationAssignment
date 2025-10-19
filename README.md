@@ -1,4 +1,4 @@
-# MyCommunicationAssignment
+# My Communication Assignment
 
 A Flutter application implementing clean architecture principles for efficient data management and communication between local and remote data sources.
 
