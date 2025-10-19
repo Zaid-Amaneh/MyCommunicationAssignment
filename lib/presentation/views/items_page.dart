@@ -57,10 +57,10 @@ class _ItemsPageState extends State<ItemsPage> {
       ),
       body: BlocConsumer<ItemsCubit, ItemsState>(
         listener: (context, state) {
-          if (state.status == ItemsStatus.success && state.currentPage==1) {
+          if (state.status == ItemsStatus.success && state.currentPage == 1) {
             customToastification(
               context: context,
-              type:ToastificationType.success,
+              type: ToastificationType.success,
               title: "Successfully",
               description: 'Data has den updated successfully',
               seconds: 3,
@@ -103,7 +103,12 @@ class _ItemsPageState extends State<ItemsPage> {
                       : const SizedBox(height: 16);
                 }
                 final item = state.items[index];
-                return ItemCard(item: item);
+                
+                // Animated item card with staggered animation
+                return AnimatedItemCard(
+                  index: index,
+                  child: ItemCard(item: item),
+                );
               },
             ),
           );
@@ -118,5 +123,79 @@ class _ItemsPageState extends State<ItemsPage> {
       ..removeListener(_onScroll)
       ..dispose();
     super.dispose();
+  }
+}
+
+class AnimatedItemCard extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const AnimatedItemCard({
+    super.key,
+    required this.index,
+    required this.child,
+  });
+
+  @override
+  State<AnimatedItemCard> createState() => _AnimatedItemCardState();
+}
+
+class _AnimatedItemCardState extends State<AnimatedItemCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    Future.delayed(Duration(milliseconds: widget.index*2), () {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.child,
+      ),
+    );
   }
 }
